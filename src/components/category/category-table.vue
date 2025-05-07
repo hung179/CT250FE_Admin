@@ -17,7 +17,7 @@
                         </tr>
                     </thead>
                     <tbody class="bg-transparent text-zinc-800">
-                        <tr v-for="(category, index) in categories" :key="category._id">
+                        <tr v-for="category in categories" :key="category._id">
                             <td class="py-4 pl-6 pr-1 text-left w-3/12 font-normal text-base">
                                 {{ category.ten_NH }}
                             </td>
@@ -29,20 +29,20 @@
                             >
                                 {{ findCategoryHierarchy(category) }}
                             </td>
-                            <td class="py-2 text-center w-2/12 align-middle font-normal text-base">
-                                <div class="w-full flex flex-col space-y-2">
+                            <td
+                                class="py-2 flex text-center align-middle font-normal text-base"
+                            >
+                                <div class="w-full flex flex-row space-x-2 justify-center">
                                     <NuxtLink
                                         :to="`/category/detail/${category._id}`"
                                         class="text-blue-500 rounded hover:text-blue-700 cursor-pointer text-base font-normal"
                                     >
                                         Cập nhật
                                     </NuxtLink>
-                                    <!-- <span
-                                        @click="remove(category._id, index)"
-                                        class="text-blue-500 rounded hover:text-blue-700 cursor-pointer text-base font-normal"
-                                    >
+
+                                    <p @click="deleteCategory(category)" class="text-red-500 rounded hover:text-red-700 cursor-pointer text-base font-normal">
                                         Xóa
-                                    </span> -->
+                                    </p>
                                 </div>
                             </td>
                         </tr>
@@ -167,6 +167,32 @@ const nextPage = () => {
 
 const toggleDropdown = () => {
     showDropdown.value = !showDropdown.value;
+};
+
+const deleteCategory = async (category) => {
+    const { isConfirmed } = await Swal.fire({
+        title: "Xóa ngành hàng",
+        text: "Bạn có chắc chắn muốn xóa ngành hàng này?",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonText: "Xóa",
+        cancelButtonText: "Hủy",
+    });
+
+    if (isConfirmed) {
+        try {
+            const res = await $api.delete(`/categories/${category._id}`);
+            if (res.data.success) {
+                toast.success("Ngành hàng đã được xóa thành công!");
+                getCategories();
+            } else {
+                toast.error("Có lỗi xảy ra, không thể xóa ngành hàng!");
+            }
+        } catch (error) {
+            console.error("Lỗi:", error);
+            toast.error("Có lỗi xảy ra, không thể xóa ngành hàng!");
+        }
+    }
 };
 
 onMounted(() => {

@@ -71,7 +71,7 @@ const saveAndHide = () => {
         confirmButtonColor: "#34D399",
     }).then((result) => {
         if (result.isConfirmed) {
-            sanPham.value.daAn = true;
+            sanPham.daAn_SP = true;
             submit();
         }
     });
@@ -133,7 +133,7 @@ const sanPham = reactive({
     ttBanHang_SP: [],
     phanLoai_SP: [],
     ttAnhXoa_SP: [],
-    daAn_SP: Boolean,
+    daAn_SP: false,
 });
 
 const authStore = useAuthStore();
@@ -141,15 +141,15 @@ const { $api } = useNuxtApp(); // ✅ Truy cập api từ plugin
 async function getProduct(id) {
     try {
         const res = await $api.get(`products/${id}`);
-        sanPham.anhBia_SP = res.data.data.product.anhBia_SP;
-        sanPham.anh_SP = res.data.data.product.anh_SP;
-        sanPham.ten_SP = res.data.data.product.ten_SP;
-        sanPham.nganhHang_SP = res.data.data.product.nganhHang_SP;
-        sanPham.moTa_SP = res.data.data.product.moTa_SP;
-        sanPham.ttBanHang_SP = res.data.data.product.ttBanHang_SP;
-        sanPham.ttChiTiet_SP = res.data.data.product.ttChiTiet_SP;
-        sanPham.phanLoai_SP = res.data.data.product.phanLoai_SP;
-        sanPham.daAn_SP = res.data.data.product.daAn_SP;
+        sanPham.anhBia_SP = res.data.data.anhBia_SP;
+        sanPham.anh_SP = res.data.data.anh_SP;
+        sanPham.ten_SP = res.data.data.ten_SP;
+        sanPham.nganhHang_SP = res.data.data.nganhHang_SP;
+        sanPham.moTa_SP = res.data.data.moTa_SP;
+        sanPham.ttBanHang_SP = res.data.data.ttBanHang_SP;
+        sanPham.ttChiTiet_SP = res.data.data.ttChiTiet_SP;
+        sanPham.phanLoai_SP = res.data.data.phanLoai_SP;
+        sanPham.daAn_SP = res.data.data.daAn_SP;
 
         sanPham.isNew = false;
     } catch (error) {

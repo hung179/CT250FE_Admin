@@ -124,6 +124,7 @@
 
 <script setup>
 import { ref, computed } from "vue";
+import Swal from "sweetalert2";
 
 const emit = defineEmits(["close"]);
 
@@ -179,6 +180,11 @@ async function addAttribute(data) {
     try {
         const res = await $api.post("/attributes", data);
         if (res.data.success) {
+            Swal.fire({
+                icon: "success",
+                title: "Thành công",
+                text: "Thêm thuộc tính thành công",
+            });
             danhSachThuocTinh.value = getAttribute();
         }
     } catch (error) {

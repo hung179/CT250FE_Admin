@@ -7,10 +7,10 @@
                 <span class="text-sm text-zinc-700">Tìm kiếm đơn hàng</span>
                 <input
                     v-model="inputValue"
-                    @input="handleInput"
+                    @keyup.enter="search"
                     type="text"
                     class="flex-1 text-sm text-zinc-900 bg-transparent outline-none"
-                    placeholder="Nhập mã đơn hàng"
+                    placeholder="Nhập mã đơn hàng, tên người nhận hoặc số điện thoại"
                 />
             </div>
             <div class="flex items-center flex-2/5 h-fit space-x-3 justify-end">
@@ -93,9 +93,15 @@
                             </div>
                         </div>
                     </div>
-                    <div class="w-full h-fit flex p-6 justify-end bg-zinc-100">
-                        <div class="px-6 py-3 bg-emerald-300 rounded-md cursor-pointer">
-                            Xác nhận đơn hàng
+                    <div
+                        class="w-full h-fit flex p-6 justify-end bg-zinc-100"
+                        v-if="order.trangThai_DH !== 4 && order.trangThai_DH !== 6"
+                    >
+                        <div
+                            @click="upDateState(order._id, order.trangThai_DH)"
+                            class="px-6 py-3 bg-emerald-300 rounded-md cursor-pointer"
+                        >
+                            {{ getButtonText(order.trangThai_DH) }}
                         </div>
                     </div>
                 </div>
@@ -157,7 +163,38 @@ const formatDate = (dateString) => {
     return format(new Date(dateString), "dd/MM/yyyy HH:mm:ss", { locale: vi });
 };
 
+const allOrders = ref([]);
 const inputValue = ref("");
+const search = () => {
+    if (inputValue.value.trim() === "") {
+        // Nếu ô tìm kiếm trống, hiển thị lại tất cả dữ liệu
+        filterOrdersForCurrentPage();
+        return;
+    }
+
+    // Tìm kiếm trong tất cả dữ liệu đã tải
+    const keyword = inputValue.value.toLowerCase().trim();
+    const filteredOrders = allOrders.value.filter((order) => {
+        // Tìm theo mã đơn hàng
+        if (order.ma_DH.toLowerCase().includes(keyword)) return true;
+
+        // Tìm theo tên người nhận
+        if (order.ttNhanHang_DH.hoTen_NH.toLowerCase().includes(keyword)) return true;
+
+        // Tìm theo số điện thoại
+        if (order.ttNhanHang_DH.sdt_NH.includes(keyword)) return true;
+
+        // Tìm theo tên sản phẩm trong chi tiết đơn hàng
+        return order.chiTiet_DH.some((item) =>
+            item.tenSanPham_CTDH.toLowerCase().includes(keyword)
+        );
+    });
+
+    orders.value = filteredOrders;
+    totalOrder.value = filteredOrders.length;
+    currentPage.value = 1; // Reset về trang đầu tiên khi tìm kiếm
+};
+
 const stateOrder = [
     "Tất cả",
     "Chờ xác nhận",
@@ -167,17 +204,27 @@ const stateOrder = [
     "Yêu cầu hủy",
 ];
 
+// Hàm trả về text cho nút dựa vào trạng thái đơn hàng
+const getButtonText = (trangThai) => {
+    if (trangThai === 1) return "Chuyển sang chờ chờ vận chuyển";
+    if (trangThai === 2) return "Chuyển sang giao hàng";
+    if (trangThai === 3) return "Xác nhận đã giao";
+    if (trangThai === 5) return "Xác nhận hủy đơn";
+    return "Xác nhận đơn hàng";
+};
+
 const clear = () => {
     inputValue.value = "";
-    getOrders(0);
+    // Khôi phục lại toàn bộ dữ liệu gốc
+    totalOrder.value = allOrders.value.length;
+    filterOrdersForCurrentPage();
     currentPage.value = 1;
 };
 
-const search = () => {
-    if (inputValue.value != "") {
-        findOrders(0);
-        currentPage.value = 1;
-    }
+const filterOrdersForCurrentPage = () => {
+    const startIndex = (currentPage.value - 1) * perPage;
+    const endIndex = startIndex + perPage;
+    orders.value = allOrders.value.slice(startIndex, endIndex);
 };
 
 const totalOrder = ref(0);
@@ -195,31 +242,31 @@ const changePage = (page) => {
     if (page >= 1 && page <= totalPages.value) {
         currentPage.value = page;
         showDropdown.value = false;
-        console.log(currentPage);
-        if (inputValue.value != "") {
-            findOrders(currentPage.value - 1);
+
+        if (inputValue.value.trim() !== "") {
+            // Nếu đang tìm kiếm, không cần lọc lại
+            // Vì kết quả tìm kiếm đã được lọc toàn bộ
         } else {
-            getOrders(currentPage.value - 1);
+            // Nếu không tìm kiếm, lọc theo trang
+            filterOrdersForCurrentPage();
         }
     }
 };
 // Nút trước / sau
 const prevPage = () => {
-    currentPage.value > 1 && currentPage.value--;
-    console.log(currentPage);
-    if (inputValue.value != "") {
-        findOrders(currentPage.value - 1);
-    } else {
-        getOrders(currentPage.value - 1);
+    if (currentPage.value > 1) {
+        currentPage.value--;
+        if (inputValue.value.trim() === "") {
+            filterOrdersForCurrentPage();
+        }
     }
 };
 const nextPage = () => {
-    currentPage.value < totalPages.value && currentPage.value++;
-    console.log(currentPage);
-    if (inputValue.value != "") {
-        findOrders(currentPage.value - 1);
-    } else {
-        getOrders(currentPage.value - 1);
+    if (currentPage.value < totalPages.value) {
+        currentPage.value++;
+        if (inputValue.value.trim() === "") {
+            filterOrdersForCurrentPage();
+        }
     }
 };
 
@@ -253,29 +300,95 @@ const state = computed(() => {
     return null; // Mặc định nếu không khớp
 });
 
-async function getOrders(page) {
+async function upDateState(id, trangThai_DH) {
     try {
-        console.log(state.value);
-        const res = await $api.get("order", {
-            params: {
-                page: String(page),
-                state: state.value !== null ? String(state.value) : 0,
-            },
-        });
-        if (res.data.success == true) {
-            orders.value = res.data.data.orders;
-            if (page == 0) {
-                totalOrder.value = res.data.data.total;
-            }
+        if(trangThai_DH == 5) {
+           const response = await $api.delete(`order/${id}`);
+           if (response.data.success == true) {
+            Swal.fire({
+                icon: "success",
+                title: "Thành công",
+                text: "Cập nhật trạng thái đơn hàng thành công",
+            });
+            getOrders(currentPage.value - 1);
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: "Lỗi",
+                text: res.data.message,
+            });
         }
-
-        console.log(orders.value);
+        }
+        else{
+        if (trangThai_DH == 1) {
+            trangThai_DH = 2;
+        } else if (trangThai_DH == 2) {
+            trangThai_DH = 3;
+        } else if (trangThai_DH == 3) {
+            trangThai_DH = 4;
+        }
+        const res = await $api.put(`order/${id}?state=${trangThai_DH}`);
+        if (res.data.success == true) {
+            Swal.fire({
+                icon: "success",
+                title: "Thành công",
+                text: "Cập nhật trạng thái đơn hàng thành công",
+            });
+            getOrders(currentPage.value - 1);
+        } else {
+            Swal.fire({
+                icon: "error",
+                title: "Lỗi",
+                text: res.data.message,
+            });
+        }
+    }
     } catch (error) {
         console.error("Lỗi:", error);
     }
 }
 
+async function findOrders(page) {
+    try {
+        // Implement the search functionality here
+        // This function is referenced but not implemented in the original code
+        console.log("Searching for:", inputValue.value);
+    } catch (error) {
+        console.error("Lỗi tìm kiếm:", error);
+    }
+}
+
+async function getOrders() {
+    try {
+        const res = await $api.get("order", {
+            params: {
+                state: state.value !== null ? String(state.value) : "0",
+                limit: "1000", // Lấy nhiều bản ghi hơn hoặc tất cả nếu API hỗ trợ
+            },
+        });
+
+        if (res.data.success == true) {
+            allOrders.value = res.data.data.orders;
+            totalOrder.value = allOrders.value.length;
+            filterOrdersForCurrentPage(); // Chỉ hiển thị các đơn hàng của trang hiện tại
+        }
+    } catch (error) {
+        console.error("Lỗi:", error);
+        Swal.fire({
+            icon: "error",
+            title: "Lỗi",
+            text: "Đã xảy ra lỗi khi tải dữ liệu",
+        });
+    }
+}
+
+const handleInput = (e) => {
+    if (e.key === "Enter") {
+        search();
+    }
+};
+
 onMounted(() => {
-    getOrders(0);
+    getOrders();
 });
 </script>

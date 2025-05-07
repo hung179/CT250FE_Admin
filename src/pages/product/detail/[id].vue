@@ -14,9 +14,9 @@ const handleSubmit = (sanPham) => {
         formData.append("fileAnh_SP", file);
     });
     formData.append("ten_SP", sanPham.ten_SP);
-    formData.append("nganhHang_SP", sanPham.nganhHang_SP);
+    formData.append("nganhHang_SP", JSON.stringify(sanPham.nganhHang_SP));
     formData.append("moTa_SP", sanPham.moTa_SP);
-    if (sanPham.daAn) formData.append("daAn", sanPham.daAn);
+    if (sanPham.daAn_SP) hide(sanPham.daAn_SP);
     formData.append(`ttChiTiet_SP`, JSON.stringify(sanPham.ttChiTiet_SP));
     formData.append("ttBanHang_SP", JSON.stringify(sanPham.ttBanHang_SP));
     formData.append("phanLoai_SP", JSON.stringify(sanPham.phanLoai_SP));
@@ -45,6 +45,10 @@ async function update(product) {
         router.push("/product");
     }
 }
+
+const hide = async (daAn_SP) => {
+    await $api.put(`products/state/${id}`, { state: daAn_SP });
+};
 
 import { useToast } from "vue-toastification";
 const toast = useToast();

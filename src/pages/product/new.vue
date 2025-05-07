@@ -10,7 +10,7 @@ const handleSubmit = (sanPham) => {
         formData.append("fileAnh_SP", file);
     });
     formData.append("ten_SP", sanPham.ten_SP);
-    formData.append("nganhHang_SP", sanPham.nganhHang_SP);
+    formData.append("nganhHang_SP", JSON.stringify(sanPham.nganhHang_SP));
     formData.append("moTa_SP", sanPham.moTa_SP);
     if (sanPham.daAn) formData.append("daAn", sanPham.daAn);
     formData.append(`ttChiTiet_SP`, JSON.stringify(sanPham.ttChiTiet_SP));

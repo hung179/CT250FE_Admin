@@ -3,6 +3,7 @@
 </template>
 <script setup>
 import { useRouter } from "vue-router";
+import Swal from "sweetalert2";
 
 const router = useRouter();
 
@@ -15,10 +16,13 @@ const { $api } = useNuxtApp(); // ✅ Truy cập api từ plugin
 
 async function addCategory(data) {
     try {
-        console.log(data);
         const res = await $api.post("/categories", data);
-        console.log(res);
         if (res.data.success) {
+            Swal.fire({
+                icon: "success",
+                title: "Thành công",
+                text: "Thêm ngành hàng thành công",
+            });
             router.push("/category");
         }
     } catch (error) {

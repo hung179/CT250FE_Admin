@@ -72,6 +72,40 @@
                     </button>
                 </NuxtLink>
             </li>
+            <li>                
+                <div class="w-full h-fit font-medium text-zinc-500 p-2">Thông tin liên hệ</div>
+                <NuxtLink to="/contact/">
+                    <button
+                        @click="active = 6"
+                        class="text-left cursor-pointer py-1 text-sm font-normal w-full h-fit pl-5"
+                        :class="
+                            active === 6
+                                ? 'text-emerald-400 font-semibold'
+                                : 'text-zinc-500 hover:text-emerald-400'
+                        "
+                    >
+                        Thông tin liên hệ
+                    </button>
+                </NuxtLink>
+            </li>
+            <li>
+                <div class="w-full h-fit font-medium text-zinc-500 p-2">Quản lý vận chuyển</div>
+
+                <NuxtLink to="/shipping/">
+
+                    <button
+                        @click="active = 8"
+                        class="text-left cursor-pointer py-1 text-sm font-normal w-full h-fit pl-5"
+                        :class="
+                            active === 8
+                                ? 'text-emerald-400 font-semibold'
+                                : 'text-zinc-500 hover:text-emerald-400'
+                        "
+                    >
+                        Thông tin vận chuyển
+                    </button>
+                </NuxtLink>
+            </li>
         </ul>
     </nav>
 </template>

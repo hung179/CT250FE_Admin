@@ -278,10 +278,10 @@ const formattedMaSP = (code) => {
 };
 
 const getOptionName = (productIndex, optIndex, classIndex) => {
-    return products.value[productIndex].phanLoai_SP[classIndex].tuyChon_PL[optIndex].ten_TC;
+    products.value[productIndex]?.phanLoai_SP?.[classIndex]?.tuyChon_PL?.[optIndex]?.ten_TC || "Không có";
 };
 
-const perPage = 1;
+const perPage = 10;
 const currentPage = ref(1);
 const showDropdown = ref(false);
 
@@ -293,7 +293,6 @@ const changePage = (page) => {
     if (page >= 1 && page <= totalPages.value) {
         currentPage.value = page;
         showDropdown.value = false;
-        console.log(currentPage);
         if (inputValue.value != "") {
             findProducts(currentPage.value - 1);
         } else {
@@ -304,7 +303,6 @@ const changePage = (page) => {
 // Nút trước / sau
 const prevPage = () => {
     currentPage.value > 1 && currentPage.value--;
-    console.log(currentPage);
     if (inputValue.value != "") {
         findProducts(currentPage.value - 1);
     } else {
@@ -313,7 +311,6 @@ const prevPage = () => {
 };
 const nextPage = () => {
     currentPage.value < totalPages.value && currentPage.value++;
-    console.log(currentPage);
     if (inputValue.value != "") {
         findProducts(currentPage.value - 1);
     } else {
@@ -340,10 +337,10 @@ const state = computed(() => {
 });
 async function getProducts(page) {
     try {
-        console.log(state.value !== null ? String(state.value) : undefined);
         const res = await $api.get("products/all", {
             params: {
                 page: String(page),
+                limit: String(perPage),
                 state: state.value !== null ? String(state.value) : undefined,
             },
         });

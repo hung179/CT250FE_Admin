@@ -101,16 +101,15 @@
 <script setup>
 const props = defineProps({
     categoriesSelected: Object,
-    categories: Object,
-});
-
+    categories: Array
+})
 const category1 = computed(() => props.categories.filter((cat) => cat.cap_NH === 1));
 const category2 = computed(() => props.categories.filter((cat) => cat.cap_NH === 2));
 const category3 = computed(() => props.categories.filter((cat) => cat.cap_NH === 3));
 
-const category1Selected = ref(props.categoriesSelected.category1);
-const category2Selected = ref(props.categoriesSelected.category2);
-const category3Selected = ref(props.categoriesSelected.category3);
+const category1Selected = ref(props.categoriesSelected?.category1 || null);
+const category2Selected = ref(props.categoriesSelected?.category2 || null);
+const category3Selected = ref(props.categoriesSelected?.category3 || null);
 
 const handleCategory1Selected = (category1) => {
     category1Selected.value = category1;
@@ -124,6 +123,14 @@ const handleCategory3Selected = (category3) => {
 const emit = defineEmits(["close", "confirm"]);
 
 const confirm = () => {
+    // Tạo đối tượng nganhHang_SP với cấu trúc phân cấp
+    const categoryObject = {
+        cap1_NH: category1Selected.value?._id || null,
+        cap2_NH: category2Selected.value?._id || null,
+        cap3_NH: category3Selected.value?._id || null
+    };
+    
+    // Lấy danh mục thấp nhất để xác định danh mục hiển thị
     const selectedCategories = [
         category1Selected.value,
         category2Selected.value,
@@ -134,10 +141,23 @@ const confirm = () => {
         (lowest, current) => (current.cap_NH > (lowest?.cap_NH || 0) ? current : lowest),
         null
     );
-
-    emit("confirm", { _id: lowestCategory?._id || null });
+    
+    // Emit đối tượng nganhHang_SP thay vì chỉ ID
+    emit("confirm", { 
+        _id: lowestCategory?._id || null,
+        categoryObject: categoryObject
+    });
+    
     emit("close");
 };
+
+watchEffect(() => {
+    if (props.categoriesSelected) {
+        category1Selected.value = props.categoriesSelected.category1;
+        category2Selected.value = props.categoriesSelected.category2;
+        category3Selected.value = props.categoriesSelected.category3;
+    }
+});
 </script>
 <style>
 ::-webkit-scrollbar {

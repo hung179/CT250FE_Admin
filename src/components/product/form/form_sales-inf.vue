@@ -633,7 +633,6 @@ onBeforeMount(() => {
     if (props.sanPham.ttBanHang_SP.length === 0) {
         props.sanPham.ttBanHang_SP = generateSalesList();
     }
-    console.log("sanPham", props.sanPham);
 });
 
 // Kiểm tra giá trị hợp lệ

@@ -419,15 +419,70 @@ const getCategoryPathString = (_id) => {
 
 const formattedCategoriesSelected = ref("Chọn ngành hàng");
 
-const updateCategoriesSelected = (id) => {
-    formattedCategoriesSelected.value = getCategoryPathString(id);
+const updateCategoriesSelected = (value) => {
+    if (!value) {
+        formattedCategoriesSelected.value = "Chọn ngành hàng";
+        categorySelected.value = { category1: null, category2: null, category3: null };
+        return;
+    }
+    
+    // Trường hợp value là một đối tượng { cap1_NH, cap2_NH, cap3_NH }
+    if (typeof value === 'object' && value !== null) {
+        // Tìm các đối tượng category tương ứng
+        let category1Obj = null;
+        let category2Obj = null;
+        let category3Obj = null;
+        
+        if (value.cap1_NH) {
+            category1Obj = categories.value.find(cat => cat._id === value.cap1_NH);
+        }
+        
+        if (value.cap2_NH) {
+            category2Obj = categories.value.find(cat => cat._id === value.cap2_NH);
+        }
+        
+        if (value.cap3_NH) {
+            category3Obj = categories.value.find(cat => cat._id === value.cap3_NH);
+        }
+        
+        // Cập nhật categorySelected
+        categorySelected.value = {
+            category1: category1Obj,
+            category2: category2Obj,
+            category3: category3Obj
+        };
+        
+        // Cập nhật đường dẫn hiển thị
+        formattedCategoriesSelected.value = [
+            category1Obj?.ten_NH,
+            category2Obj?.ten_NH,
+            category3Obj?.ten_NH
+        ].filter(Boolean).join(" > ");
+        
+        // Đảm bảo nganhHang_SP vẫn duy trì định dạng { cap1_NH, cap2_NH, cap3_NH }
+        if (!props.sanPham.nganhHang_SP || typeof props.sanPham.nganhHang_SP !== 'object') {
+            props.sanPham.nganhHang_SP = value;
+        }
+    } 
+    // Trường hợp value là một ID đơn lẻ (cách cũ)
+    else if (typeof value === 'string') {
+        formattedCategoriesSelected.value = getCategoryPathString(value);
+    }
 };
 
+
 const handlecategoriesSelected = (data) => {
-    updateCategoriesSelected(data._id);
-    props.sanPham.nganhHang_SP = data._id;
-    props.sanPham.ttChiTiet_SP = getCategoryAttributes(data._id);
-    console.log(props.sanPham);
+    // Lưu categoryObject từ CategoryTableForm
+    props.sanPham.nganhHang_SP = data.categoryObject;
+    
+    // Cập nhật đường dẫn hiển thị và categorySelected
+    updateCategoriesSelected(data.categoryObject);
+    
+    // Lấy ID danh mục cuối cùng để lấy thuộc tính
+    const finalId = data._id;
+    if (finalId) {
+        props.sanPham.ttChiTiet_SP = getCategoryAttributes(finalId);
+    }
 };
 const validateField = (value, fieldType) => {
     if (fieldType === "anhBia_SP" && (!value || value.length === 0 || value === null))
@@ -457,10 +512,23 @@ const validateForm = () => {
 
 onMounted(async () => {
     await getCategory();
-    updateCategoriesSelected(props.sanPham.nganhHang_SP);
+    
+    // Nếu có dữ liệu nganhHang_SP từ backend
+    if (props.sanPham.nganhHang_SP) {
+        // Đảm bảo nganhHang_SP là đối tượng
+        if (typeof props.sanPham.nganhHang_SP === 'string') {
+            const categoryPath = findCategoryPath(props.sanPham.nganhHang_SP);
+            props.sanPham.nganhHang_SP = {
+                cap1_NH: categoryPath.category1?._id || null,
+                cap2_NH: categoryPath.category2?._id || null,
+                cap3_NH: categoryPath.category3?._id || null
+            };
+        }
+        
+        updateCategoriesSelected(props.sanPham.nganhHang_SP);
+    }
 });
 
 const showCategoryTable = ref(false);
-
 defineExpose({ validateForm });
 </script>
